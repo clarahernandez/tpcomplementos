@@ -4,11 +4,15 @@
 # Complementos Matematicos I
 # Ejemplo parseo argumentos
 
+#CONSTANTES
+AREA = 100
+
+
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from random import uniform
-from math import sqrt, sqr
+from math import sqrt, pow
 
 
 class LayoutGraph:
@@ -28,10 +32,11 @@ class LayoutGraph:
 
         # Inicializo estado
         # Completar
-        self.posiciones = {}  #Esto podríamos borrarlo si usamos posicionx y posiciony
-        self.posicionx = {}   #Diccionario, la clave es el vertice el valor la posición x
-        self.posiciony = {}  #Diccionario, la clave es el vertice el valor la posición y
+        self.posicion_x = {}   #Diccionario, la clave es el vertice el valor la posición x
+        self.posicion_y = {}  #Diccionario, la clave es el vertice el valor la posición y
         self.fuerzas = {}
+        self.acum_x = {}
+        self.acum_y = {}
 
 
         # Guardo opciones
@@ -46,15 +51,42 @@ class LayoutGraph:
             area = 100
             vertices = self.grafo[0]
             for vertice in vertices:
-                posicionx(uniform(area))
-                poisiciony(uniform(area))
+                self.posicion_x(vertice) = uniform(area)
+                self.posicion_y(vertice) = uniform(area)
 
 
-        def fuerza_atraccion(self, vertice0, vertice1):
-            fuerzaAtraccion = sqrt( sqr(posicionx(vertice0) - posicionx(vertice1))
-                            + sqr(posiciony(vertice0) - posiciony(vertice1)))
-            return fuerzaAtraccion
+        def distancia(self, vertice0, vertice1):
+            d = sqrt( pow(posicion_x(vertice0) - posicion_x(vertice1), 2)
+                            + pow(posicion_y(vertice0) - posicion_y(vertice1), 2))
+            return d
 
+        def fuerza_atraccion(self, d, k):
+            f = pow(d, 2) / k
+            return f
+        def fuerza_repulsion(self, d, k):
+            f = pow(k, 2) / d
+            return f
+
+        def inicializar_acumuladores(self):
+            numVertices = len(self.grafo[0])
+            for vertice in range(numVertices):
+                self.acum_x(vertice) = 0
+                self.acum_y(vertice) = 0
+
+        def calcular_fuerza_atraccion(self):
+            AREA =
+            k =
+            aristas = self.grafo[1]
+            for arista in aristas:
+                d = distancia(self, arista[0], arista[1])
+                mod_fa = fuerza_atraccion(self, d, )
+
+
+        def step():
+            inicializar_acumuladores()
+            calcular_fuerza_atraccion()
+            calcular_fuerza_repulsion()
+            actualizar_posiciones()
 
 
 
