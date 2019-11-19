@@ -47,96 +47,90 @@ class LayoutGraph:
         self.refresh = refresh
         self.c1 = c1
         self.c2 = c2
-        self.t = t
 
-        def posiciones_random(self):
-            area = 100
-            vertices = self.grafo[0]
-            for vertice in vertices:
-                self.posicion_x[vertice] = uniform(area)
-                self.posicion_y[vertice] = uniform(area)
+    def posiciones_random(self):
+        vertices = self.grafo[0]
+        for vertice in vertices:
+            self.posicion_x[vertice] = uniform(0, AREA)
+            self.posicion_y[vertice] = uniform(0, AREA)
 
 
-        def distancia(self, vertice0, vertice1):
-            d = sqrt( pow(posicion_x(vertice0) - posicion_x(vertice1), 2)
-                            + pow(posicion_y(vertice0) - posicion_y(vertice1), 2))
-            return d
+    def distancia(self, vertice0, vertice1):
+        d = sqrt( pow(self.posicion_x(vertice0) - self.posicion_x(vertice1), 2)
+                        + pow(self.posicion_y(vertice0) - self.posicion_y(vertice1), 2))
+        return d
 
-        def fuerza_atraccion(self, d, k):
-            f = pow(d, 2) / k
-            return f
+    def fuerza_atraccion(self, d, k):
+        f = pow(d, 2) / k
+        return f
 
-        def fuerza_repulsion(self, d, k):
-            f = pow(k, 2) / d
-            return f
+    def fuerza_repulsion(self, d, k):
+        f = pow(k, 2) / d
+        return f
 
-        def inicializar_acumuladores(self):
-            numVertices = len(self.grafo[0])
-            for vertice in range(numVertices):
-                self.acum_x[vertice] = 0
-                self.acum_y[vertice] = 0
+    def inicializar_acumuladores(self):
+        numVertices = len(self.grafo[0])
+        for vertice in range(numVertices):
+            self.acum_x[vertice] = 0
+            self.acum_y[vertice] = 0
 
-        def calcular_fuerza_atraccion(self):
+    def calcular_fuerza_atraccion(self):
 
-            aristas = self.grafo[1]
-            for arista in aristas:
-                d = distancia(self, arista[0], arista[1])
-                mod_fa = fuerza_atraccion(self, d, K)
-                #fx = mod_fa( self.posicion_x[arista(0) - self.posicion_x[arista(1)] ) / d
-                #fy = mod_fa( self.posicion_y[arista(0) - self.posicion_y[arista(1)] ) / d
+        aristas = self.grafo[1]
+        for arista in aristas:
+            d = self.distancia(arista[0], arista[1])
+            mod_fa = fuerza_atraccion( d, K)
+            #fx = mod_fa( self.posicion_x[arista(0) - self.posicion_x[arista(1)] ) / d
+            #fy = mod_fa( self.posicion_y[arista(0) - self.posicion_y[arista(1)] ) / d
 
-                self.acum_x[arista[0]] = self.acum_x[arista[0]] + fx
-                self.acum_y[arista[0]] = self.acum_y[arista[0]] + fy
-                self.acum_x[arista[1]] = self.acum_x[arista[1]] + fx
-                self.acum_y[arista[1]] = self.acum_y[arista[1]] + fy
+            self.acum_x[arista[0]] = self.acum_x[arista[0]] + fx
+            self.acum_y[arista[0]] = self.acum_y[arista[0]] + fy
+            self.acum_x[arista[1]] = self.acum_x[arista[1]] + fx
+            self.acum_y[arista[1]] = self.acum_y[arista[1]] + fy
 
-        def calcular_fuerza_repulsion(self): #TODO
-            pass
+    def calcular_fuerza_repulsion(self): #TODO
+        pass
 
-        def actualizar_posiciones(self):
-            vertices = self.grafo[0]
-            for vertice in vertices:
+    def actualizar_posiciones(self):
+        vertices = self.grafo[0]
+        for vertice in vertices:
 
-                posicion_x = self.posicion_x[vertice] + self.acum_x[vertice]
-                posicion_y = self.posicion_y[vertice] + self.acum_y[vertice]
+            posicion_x = self.posicion_x[vertice] + self.acum_x[vertice]
+            posicion_y = self.posicion_y[vertice] + self.acum_y[vertice]
 
-                if posicion_x < AREA:
-                    self.posicion_x[vertice] = posicion_x
-                else:
-                    self.posicion_x[vertice] = AREA
-                if posicion_y < AREA:
-                    self.posicion_y[vertice] = posicion_y
-                else:
-                    self.posicion_y[vertice] = AREA
+            if posicion_x < AREA:
+                self.posicion_x[vertice] = posicion_x
+            else:
+                self.posicion_x[vertice] = AREA
+            if posicion_y < AREA:
+                self.posicion_y[vertice] = posicion_y
+            else:
+                self.posicion_y[vertice] = AREA
 
-        def calcular_fuerza_gravedad(self): #TODO
-            pass
-        def actualizar_temperatura(self):
-            self.t = self.t*C  #Multiplicamos por la constante definida.
-
-
-        def step():
-            inicializar_acumuladores()
-            calcular_fuerza_atraccion()
-            calcular_fuerza_repulsion()
-            calcular_fuerza_gravedad()
-            actualizar_posiciones()
-            actualizar_temperatura()
+    def calcular_fuerza_gravedad(self): #TODO
+        pass
+    def actualizar_temperatura(self):
+        self.t = self.t*C  #Multiplicamos por la constante definida.
 
 
-
-
+    def step(self):
+        self.inicializar_acumuladores()
+        self.calcular_fuerza_atraccion()
+        self.calcular_fuerza_repulsion()
+        self.calcular_fuerza_gravedad()
+        self.actualizar_posiciones()
+        self.actualizar_temperatura()
 
     def layout(self):
         '''
         Aplica el algoritmo de Fruchtermann-Reingold para obtener (y mostrar)
         un layout
         '''
-        posiciones_random()
+        self.posiciones_random()
         aristas = self.grafo[1]
         for i in range(self.iters):
-            step()
-        pass
+            self.step()
+
 
 
 def main():
@@ -199,3 +193,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
