@@ -8,6 +8,7 @@
 AREA = 1000
 K = 10  #Constante que se usa para las fuerzas
 C = 0.95 #Constante que se usa para la temperatura
+CLOSEZERO = 0.00001
 
 import argparse
 import matplotlib.pyplot as plt
@@ -38,6 +39,7 @@ class LayoutGraph:
         self.fuerzas = {}
         self.acum_x = {}
         self.acum_y = {}
+        self.t = 0
 
 
         # Guardo opciones
@@ -54,10 +56,8 @@ class LayoutGraph:
             self.posicion_x[vertice] = uniform(0, AREA)
             self.posicion_y[vertice] = uniform(0, AREA)
 
-
     def distancia(self, vertice0, vertice1):
-        d = sqrt( pow(self.posicion_x(vertice0) - self.posicion_x(vertice1), 2)
-                        + pow(self.posicion_y(vertice0) - self.posicion_y(vertice1), 2))
+        d = sqrt( pow(self.posicion_x[vertice0] - self.posicion_x[vertice1], 2) + pow(self.posicion_y[vertice0] - self.posicion_y[vertice1], 2))
         return d
 
     def fuerza_atraccion(self, d, k):
@@ -69,8 +69,8 @@ class LayoutGraph:
         return f
 
     def inicializar_acumuladores(self):
-        numVertices = len(self.grafo[0])
-        for vertice in range(numVertices):
+        vertices = self.grafo[0]
+        for vertice in vertices:
             self.acum_x[vertice] = 0
             self.acum_y[vertice] = 0
 
@@ -79,9 +79,14 @@ class LayoutGraph:
         aristas = self.grafo[1]
         for arista in aristas:
             d = self.distancia(arista[0], arista[1])
-            mod_fa = fuerza_atraccion( d, K)
-            #fx = mod_fa( self.posicion_x[arista(0) - self.posicion_x[arista(1)] ) / d
-            #fy = mod_fa( self.posicion_y[arista(0) - self.posicion_y[arista(1)] ) / d
+            mod_fa = self.fuerza_atraccion(d, K)
+
+            if (d==0):
+                fx = (mod_fa*(self.posicion_x[arista[0]] - self.posicion_x[arista[1]])) / CLOSEZERO
+                fy = (mod_fa*(self.posicion_y[arista[0]] - self.posicion_y[arista[1]])) / CLOSEZERO
+            else:
+                fx = (mod_fa*(self.posicion_x[arista[0]] - self.posicion_x[arista[1]])) / d
+                fy = (mod_fa*(self.posicion_y[arista[0]] - self.posicion_y[arista[1]])) / d
 
             self.acum_x[arista[0]] = self.acum_x[arista[0]] + fx
             self.acum_y[arista[0]] = self.acum_y[arista[0]] + fy
@@ -91,12 +96,21 @@ class LayoutGraph:
     def calcular_fuerza_repulsion(self): #TODO
         pass
 
+    def mul_escalar(vector,e):
+        v1=(vector[0]*e,vector[1]*e)
+        return v1
+
     def actualizar_posiciones(self):
         vertices = self.grafo[0]
         for vertice in vertices:
 
-            posicion_x = self.posicion_x[vertice] + self.acum_x[vertice]
-            posicion_y = self.posicion_y[vertice] + self.acum_y[vertice]
+            f=(self.acum_x[vertice],self.acum_y[vertice])
+            modulo_f=sqrt(pow(f[0],2)+pow(f[1],2))
+            if modulo_f > self.t:
+                f=mult_esc(mul_escalar(f,1/modulo_f),self.t)
+                (self.acum_x[vertice],self.acum_y[vertice])=f
+            #posicion_x = self.posicion_x[vertice] + self.acum_x[vertice]
+            #posicion_y = self.posicion_y[vertice] + self.acum_y[vertice]
 
             if posicion_x < AREA:
                 self.posicion_x[vertice] = posicion_x
@@ -166,11 +180,11 @@ def main():
     args = parser.parse_args()
 
     # Descomentar abajo para ver funcionamiento de argparse
-    # print args.verbose
-    # print args.iters
-    # print args.file_name
-    # print args.temp
-    # return
+    ##print(args.verbose)
+    #print(args.iters)
+    #print(args.file_name)
+    #print(args.temp)
+    #return
 
     # TODO: Borrar antes de la entrega
     grafo1 = ([1, 2, 3, 4, 5, 6, 7],
@@ -193,4 +207,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
