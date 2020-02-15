@@ -12,8 +12,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import sqrt
 from random import uniform
+from random import random
 
 
+def leer_archivo(nombreArchivo):
+    f = open(nombreArchivo, "r")
+    grafo = [[],[]]
+    tupla = f.readlines()
+    cantidadVertices = int(tupla[0].rstrip("\n"))
+    for i in range(0, cantidadVertices):
+        grafo[0].append(tupla[i+1].rstrip("\n"))
+    for j in range(cantidadVertices+1, len(tupla)):
+        grafo[1].append(tupla[j].split())
+    print(grafo)
+    return grafo
 
 class LayoutGraph:
 
@@ -39,10 +51,10 @@ class LayoutGraph:
         self.fuerzas = {}
         self.acum_x = {}
         self.acum_y = {}
-        self.t = 1
-        self.ancho = 10000
-        self.epsilon = 0.005
-        self.g = 0.1  # Constante de gravedad
+        self.t = 20000000
+        self.ancho = 1000
+        self.epsilon = 0.5
+        self.g = 0.5 # Constante de gravedad
 
         # Guardo opciones
         self.iters = iters
@@ -53,26 +65,26 @@ class LayoutGraph:
         self.c2 = c2
 
 
-    def posiciones_random(self):
+    def posiciones_random(self):  #Está bien
         for vertice in self.vertices:
             self.posicion_x[vertice] = uniform(0, self.ancho)
             self.posicion_y[vertice] = uniform(0, self.ancho)
 
-    def distancia(self, vertice0, vertice1):
+    def distancia(self, vertice0, vertice1):  #Está bien
         d = sqrt((self.posicion_x[vertice0] - self.posicion_x[vertice1])**2 + (self.posicion_y[vertice0] - self.posicion_y[vertice1])** 2)
         return d
 
-    def mul_escalar(self, vector, e):
-        v1 = (vector[0] * e, vector[1] * e)
+    def mul_escalar(self, vector, e):  #Está bien
+        v1 = [vector[0] * e, vector[1] * e]
         return v1
 
-    def fuerza_atraccion(self, d):
-        k = self.c2 * sqrt(self.ancho*self.ancho / len(self.vertices))
+    def fuerza_atraccion(self, d):  #Está bien
+        k = self.c2 * sqrt((self.ancho*self.ancho) / len(self.vertices))
         f = d**2 / k
         return f
 
     def fuerza_repulsion(self, d):  #Está bien
-        k = self.c1 * sqrt(self.ancho*self.ancho / len(self.vertices))
+        k = self.c1 * sqrt((self.ancho*self.ancho) / len(self.vertices))
         return k**2 / d
 
     def inicializar_acumuladores(self): #Está bien
@@ -86,13 +98,13 @@ class LayoutGraph:
             mod_fa = self.fuerza_atraccion(d)
 
             # Consideramos el caso de divisiones por 0
-            while (d < 0):
-                f = random.random()
+            while (d < self.epsilon):
+                f = uniform(0, 1.00)
                 self.posicion_x[arista[0]] += f
                 self.posicion_y[arista[0]] += f
                 self.posicion_x[arista[1]] -= f
                 self.posicion_y[arista[1]] -= f
-                d = dist(arista[0], arista[1])
+                d = self.distancia(arista[0], arista[1])
 
             mod_fa = self.fuerza_atraccion(d)
             fx = (mod_fa * (self.posicion_x[arista[1]] - self.posicion_x[arista[0]])) / d
@@ -111,12 +123,12 @@ class LayoutGraph:
 
                         # Consideramos el caso de divisiones por 0
                         while (d < self.epsilon):
-                            f = random.random()
+                            f = uniform(0,1.00)
                             self.posicion_x[vertice1] += f
                             self.posicion_y[vertice1] += f
                             self.posicion_x[vertice2] -= f
                             self.posicion_y[vertice2] -= f
-                            d = distancia(vertice1, vertice2)
+                            d = self.distancia(vertice1, vertice2)
 
                         mod_fa = self.fuerza_repulsion(d)
                         fx = (mod_fa * (self.posicion_x[vertice2] - self.posicion_x[vertice1])) / d
@@ -131,17 +143,31 @@ class LayoutGraph:
 
     def actualizar_posiciones(self):  #Está bien, pero pensar si funciona cuando se va de los límites de la pantalla.
         for vertice in self.vertices:
-
-            f = (self.acum_x[vertice], self.acum_y[vertice])
-            modulo_f = sqrt(f[0]**2 + f[1]**2)
+            fx = self.acum_x[vertice]
+            fy = self.acum_y[vertice]
+            modulo_f = sqrt(fx**2 + fy**2)
             if modulo_f > self.t:
-                f = (f[0] / modulo_f * self.t , f[1] / modulo_f * self.t)
-                (self.acum_x[vertice], self.acum_y[vertice]) = f
+                fx = fx / modulo_f * self.t
+                fy = fy / modulo_f * self.t
+                self.acum_x[vertice] = fx
+                self.acum_y[vertice] = fy
 
-            self.posicion_x[vertice] = self.posicion_x[vertice] + self.acum_x[vertice]
-            self.posicion_y[vertice] = self.posicion_y[vertice] + self.acum_y[vertice]
-
-
+        #    print(vertice, self.posicion_x[vertice], self.posicion_y[vertice], fx, fy)
+            nueva_posicion_x = self.posicion_x[vertice] + self.acum_x[vertice]
+            nueva_posicion_y = self.posicion_y[vertice] + self.acum_y[vertice]
+            if (nueva_posicion_x > self.ancho):
+                self.posicion_x[vertice] = self.ancho - self.epsilon
+            elif (nueva_posicion_x < 0):
+                self.posicion_x[vertice] = 0 + self.epsilon
+            else:
+                self.posicion_x[vertice] = nueva_posicion_x
+            if (nueva_posicion_y > self.ancho):
+                self.posicion_y[vertice] = self.ancho - self.epsilon
+            elif (nueva_posicion_y < 0):
+                self.posicion_y[vertice] = 0 + self.epsilon
+            else:
+                self.posicion_y[vertice] = nueva_posicion_y
+        #    print(vertice, self.posicion_x[vertice], self.posicion_y[vertice], fx, fy)
 
     def calcular_fuerza_gravedad(self):  #Está bien.
         centro = self.ancho / 2
@@ -151,16 +177,15 @@ class LayoutGraph:
 
             #Consideramos el caso de divisiones por 0
             while d < self.epsilon:
-                while (d < self.epsilon):
-                    f = random.random()
-                    self.posicion_x[vertice] += f
-                    self.posicion_y[vertice] += f
-                    d = sqrt((self.posicion_x[vertice] - centro)**2 + (self.posicion_y[vertice] - centro)** 2)
+                f = random.random()
+                self.posicion_x[vertice] += f
+                self.posicion_y[vertice] += f
+                d = sqrt((self.posicion_x[vertice] - centro)**2 + (self.posicion_y[vertice] - centro)** 2)
 
-                fx = ((self.g * (pos_x - self.posicion_x[vertice])) / d)
-                fy = ((self.g * (pos_y - self.posicion_y[vertice])) / d)
-                self.acum_x[vertice] -= fx
-                self.acum_y[vertice] -= fy
+            fx = ((self.g * (self.posicion_x[vertice] - centro)) / d)
+            fy = ((self.g * (self.posicion_y[vertice] - centro)) / d)
+            self.acum_x[vertice] -= fx
+            self.acum_y[vertice] -= fy
 
     def actualizar_temperatura(self):  #Está bien.
         self.t = self.t * self.g  # Multiplicamos por la constante definida.
@@ -177,10 +202,12 @@ class LayoutGraph:
         plt.pause(0.0001)
         x = [self.posicion_x[i] for i in self.grafo[0]]
         y = [self.posicion_y[i] for i in self.grafo[0]]
-        plt.clf()
 
-        plt.scatter(x, y)  # dibuja los puntos.
-
+        plt.clf() #Limpia la pantalla.
+        axes = plt.gca() #gca viene de get current axes.
+        axes.set_xlim([0, self.ancho])
+        axes.set_ylim([0, self.ancho])
+        plt.scatter(x, y)  #Dibuja los puntos.
         for arista in self.aristas:
             vertice1 = arista[0]
             vertice2 = arista[1]
@@ -194,12 +221,13 @@ class LayoutGraph:
         '''
         self.posiciones_random()
         plt.ion()
+
         for i in range(self.iters):
             if self.refresh != 0 and i % self.refresh == 0:  #Ya que imprime cada determinadas iteraciones.
                     self.step()
                     self.show_graph()
-        if self.refresh == 0:
-            self.show_graph()
+            if self.refresh == 0:
+                self.show_graph()
         plt.ioff()  # lo cierra
         plt.show()  # lo muestra
 
@@ -225,7 +253,7 @@ def main():
         '--temp',
         type = float,
         help = 'Temperatura inicial',
-        default = 100.0
+        default = 200
     )
     # Archivo del cual leer el grafo
     parser.add_argument(
@@ -242,13 +270,10 @@ def main():
     print(args.temp)
     # return
 
-    # TODO: Borrar antes de la entrega
-    grafo1 = ([1, 2, 3, 4, 5, 6, 7],
-              [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 1)])
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
-        grafo1,  # TODO: Cambiar para usar grafo leido de archivo
+        leer_archivo(args.file_name),
         iters = args.iters,
         refresh = 1,
         c1 = 0.1,
